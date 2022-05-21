@@ -35,4 +35,20 @@ if (typeof window !== 'undefined') {
   global.cancelIdleCallback = function(callbackID) {
     clearTimeout(callbackID);
   };
+
+  // TODO: How do we want to handle scheduling/flushing these for UnknownLane?
+  global.requestAnimationFrameQueue = null;
+  global.requestAnimationFrame = function(callback) {
+    if (global.requestAnimationFrameQueue == null) {
+      global.requestAnimationFrameQueue = [];
+    }
+    global.requestAnimationFrameQueue.push(callback);
+  };
+
+  global.flushRequestAnimationFrameQueue = function() {
+    if (global.requestAnimationFrameQueue != null) {
+      global.requestAnimationFrameQueue.forEach(callback => callback());
+      global.requestAnimationFrameQueue = null;
+    }
+  };
 }

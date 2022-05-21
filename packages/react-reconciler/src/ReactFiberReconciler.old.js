@@ -86,6 +86,9 @@ import {
   NoTimestamp,
   getHighestPriorityPendingLanes,
   higherPriorityLane,
+  UnknownLane,
+  NoLane,
+  DefaultLane,
 } from './ReactFiberLane.old';
 import {
   getCurrentUpdatePriority,
@@ -307,7 +310,14 @@ export function createHydrationContainer(
   // enqueue the callback if one is provided).
   const current = root.current;
   const eventTime = requestEventTime();
-  const lane = requestUpdateLane(current);
+  let lane = requestUpdateLane(current);
+
+  // TODO: Do we want container updates to be in a rAF?
+  // If not, what to do about tests/act?
+  // TODO: Is there a better way to do this?
+  if ((lane & UnknownLane) !== NoLane) {
+    lane = DefaultLane;
+  }
   const update = createUpdate(eventTime, lane);
   update.callback =
     callback !== undefined && callback !== null ? callback : null;
@@ -328,7 +338,14 @@ export function updateContainer(
   }
   const current = container.current;
   const eventTime = requestEventTime();
-  const lane = requestUpdateLane(current);
+  let lane = requestUpdateLane(current);
+
+  // TODO: Do we want container updates to be in a rAF?
+  // If not, what to do about tests/act?
+  // TODO: Is there a better way to do this?
+  if ((lane & UnknownLane) !== NoLane) {
+    lane = DefaultLane;
+  }
 
   if (enableSchedulingProfiler) {
     markRenderScheduled(lane);
@@ -487,7 +504,12 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
     return;
   }
   const eventTime = requestEventTime();
-  const lane = requestUpdateLane(fiber);
+  let lane = requestUpdateLane(fiber);
+
+  // TODO: Is this right? Is there a better way to do it?
+  if ((lane & UnknownLane) !== NoLane) {
+    lane = DefaultLane;
+  }
   scheduleUpdateOnFiber(fiber, lane, eventTime);
   markRetryLaneIfNotHydrated(fiber, lane);
 }

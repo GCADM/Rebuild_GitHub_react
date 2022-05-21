@@ -40,27 +40,28 @@ export const SyncLane: Lane = /*                        */ 0b0000000000000000000
 export const InputContinuousHydrationLane: Lane = /*    */ 0b0000000000000000000000000000010;
 export const InputContinuousLane: Lane = /*             */ 0b0000000000000000000000000000100;
 
-export const DefaultHydrationLane: Lane = /*            */ 0b0000000000000000000000000001000;
-export const DefaultLane: Lane = /*                     */ 0b0000000000000000000000000010000;
+export const UnknownHydrationLane: Lane = /*            */ 0b0000000000000000000000000001000;
+export const UnknownLane: Lane = /*                     */ 0b0000000000000000000000000010000;
 
-const TransitionHydrationLane: Lane = /*                */ 0b0000000000000000000000000100000;
-const TransitionLanes: Lanes = /*                       */ 0b0000000001111111111111111000000;
-const TransitionLane1: Lane = /*                        */ 0b0000000000000000000000001000000;
-const TransitionLane2: Lane = /*                        */ 0b0000000000000000000000010000000;
-const TransitionLane3: Lane = /*                        */ 0b0000000000000000000000100000000;
-const TransitionLane4: Lane = /*                        */ 0b0000000000000000000001000000000;
-const TransitionLane5: Lane = /*                        */ 0b0000000000000000000010000000000;
-const TransitionLane6: Lane = /*                        */ 0b0000000000000000000100000000000;
-const TransitionLane7: Lane = /*                        */ 0b0000000000000000001000000000000;
-const TransitionLane8: Lane = /*                        */ 0b0000000000000000010000000000000;
-const TransitionLane9: Lane = /*                        */ 0b0000000000000000100000000000000;
-const TransitionLane10: Lane = /*                       */ 0b0000000000000001000000000000000;
-const TransitionLane11: Lane = /*                       */ 0b0000000000000010000000000000000;
-const TransitionLane12: Lane = /*                       */ 0b0000000000000100000000000000000;
-const TransitionLane13: Lane = /*                       */ 0b0000000000001000000000000000000;
-const TransitionLane14: Lane = /*                       */ 0b0000000000010000000000000000000;
-const TransitionLane15: Lane = /*                       */ 0b0000000000100000000000000000000;
-const TransitionLane16: Lane = /*                       */ 0b0000000001000000000000000000000;
+export const DefaultHydrationLane: Lane = /*            */ 0b0000000000000000000000000100000;
+export const DefaultLane: Lane = /*                     */ 0b0000000000000000000000001000000;
+
+const TransitionHydrationLane: Lane = /*                */ 0b0000000000000000000000010000000;
+const TransitionLanes: Lanes = /*                       */ 0b0000000001111111111111100000000;
+const TransitionLane1: Lane = /*                        */ 0b0000000000000000000000100000000;
+const TransitionLane2: Lane = /*                        */ 0b0000000000000000000001000000000;
+const TransitionLane3: Lane = /*                        */ 0b0000000000000000000010000000000;
+const TransitionLane4: Lane = /*                        */ 0b0000000000000000000100000000000;
+const TransitionLane5: Lane = /*                        */ 0b0000000000000000001000000000000;
+const TransitionLane6: Lane = /*                        */ 0b0000000000000000010000000000000;
+const TransitionLane7: Lane = /*                        */ 0b0000000000000000100000000000000;
+const TransitionLane8: Lane = /*                        */ 0b0000000000000001000000000000000;
+const TransitionLane9: Lane = /*                        */ 0b0000000000000010000000000000000;
+const TransitionLane10: Lane = /*                       */ 0b0000000000000100000000000000000;
+const TransitionLane11: Lane = /*                       */ 0b0000000000001000000000000000000;
+const TransitionLane12: Lane = /*                       */ 0b0000000000010000000000000000000;
+const TransitionLane13: Lane = /*                       */ 0b0000000000100000000000000000000;
+const TransitionLane14: Lane = /*                       */ 0b0000000001000000000000000000000;
 
 const RetryLanes: Lanes = /*                            */ 0b0000111110000000000000000000000;
 const RetryLane1: Lane = /*                             */ 0b0000000010000000000000000000000;
@@ -92,6 +93,12 @@ export function getLabelForLane(lane: Lane): string | void {
     }
     if (lane & InputContinuousLane) {
       return 'InputContinuous';
+    }
+    if (lane & UnknownHydrationLane) {
+      return 'UnknownHydrationLane';
+    }
+    if (lane & UnknownLane) {
+      return 'Unknown';
     }
     if (lane & DefaultHydrationLane) {
       return 'DefaultHydration';
@@ -136,6 +143,10 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
       return InputContinuousHydrationLane;
     case InputContinuousLane:
       return InputContinuousLane;
+    case UnknownHydrationLane:
+      return UnknownHydrationLane;
+    case UnknownLane:
+      return UnknownLane;
     case DefaultHydrationLane:
       return DefaultHydrationLane;
     case DefaultLane:
@@ -156,8 +167,6 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
     case TransitionLane12:
     case TransitionLane13:
     case TransitionLane14:
-    case TransitionLane15:
-    case TransitionLane16:
       return lanes & TransitionLanes;
     case RetryLane1:
     case RetryLane2:
@@ -246,7 +255,10 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
       // Default priority updates should not interrupt transition updates. The
       // only difference between default updates and transition updates is that
       // default updates do not support refresh transitions.
-      (nextLane === DefaultLane && (wipLane & TransitionLanes) !== NoLanes)
+
+      // TODO: Is this necessary for UnknownLane?
+      ((nextLane === DefaultLane || nextLane === UnknownLane) &&
+        (wipLane & TransitionLanes) !== NoLanes)
     ) {
       // Keep working on the existing in-progress tree. Do not interrupt.
       return wipLanes;
@@ -263,6 +275,7 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
     // and default updates, so they render in the same batch. The only reason
     // they use separate lanes is because continuous updates should interrupt
     // transitions, but default updates should not.
+    // TODO: Should we include UnknownLane here?
     nextLanes |= pendingLanes & DefaultLane;
   }
 
@@ -339,6 +352,8 @@ function computeExpirationTime(lane: Lane, currentTime: number) {
       // expiration times are an important safeguard when starvation
       // does happen.
       return currentTime + 250;
+    case UnknownHydrationLane:
+    case UnknownLane:
     case DefaultHydrationLane:
     case DefaultLane:
     case TransitionHydrationLane:
@@ -356,8 +371,6 @@ function computeExpirationTime(lane: Lane, currentTime: number) {
     case TransitionLane12:
     case TransitionLane13:
     case TransitionLane14:
-    case TransitionLane15:
-    case TransitionLane16:
       return currentTime + 5000;
     case RetryLane1:
     case RetryLane2:
@@ -456,7 +469,9 @@ export function includesOnlyRetries(lanes: Lanes) {
   return (lanes & RetryLanes) === lanes;
 }
 export function includesOnlyNonUrgentLanes(lanes: Lanes) {
-  const UrgentLanes = SyncLane | InputContinuousLane | DefaultLane;
+  // TODO: Is UnknownLane urgent?
+  const UrgentLanes =
+    SyncLane | InputContinuousLane | DefaultLane | UnknownLane;
   return (lanes & UrgentLanes) === NoLanes;
 }
 export function includesOnlyTransitions(lanes: Lanes) {
@@ -474,6 +489,8 @@ export function includesBlockingLane(root: FiberRoot, lanes: Lanes) {
   const SyncDefaultLanes =
     InputContinuousHydrationLane |
     InputContinuousLane |
+    UnknownHydrationLane |
+    UnknownLane |
     DefaultHydrationLane |
     DefaultLane;
   return (lanes & SyncDefaultLanes) !== NoLanes;
@@ -705,6 +722,10 @@ export function getBumpedLaneForHydration(
     case InputContinuousLane:
       lane = InputContinuousHydrationLane;
       break;
+    // TODO: Does UnknownLane need a hydration lane?
+    case UnknownLane:
+      lane = UnknownHydrationLane;
+      break;
     case DefaultLane:
       lane = DefaultHydrationLane;
       break;
@@ -722,8 +743,6 @@ export function getBumpedLaneForHydration(
     case TransitionLane12:
     case TransitionLane13:
     case TransitionLane14:
-    case TransitionLane15:
-    case TransitionLane16:
     case RetryLane1:
     case RetryLane2:
     case RetryLane3:

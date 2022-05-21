@@ -77,6 +77,13 @@ export const supportsMicrotasks = $$$hostConfig.supportsMicrotasks;
 export const scheduleMicrotask = $$$hostConfig.scheduleMicrotask;
 
 // -------------------
+//      Animation Frame
+//     (optional)
+// -------------------
+export const supportsAnimationFrame = $$$hostConfig.supportsAnimationFrame;
+export const scheduleAnimationFrame = $$$hostConfig.scheduleAnimationFrame;
+
+// -------------------
 //      Test selectors
 //     (optional)
 // -------------------

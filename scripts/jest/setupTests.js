@@ -66,6 +66,11 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     }
   });
 
+  env.beforeEach(() => {
+    // TODO: Error if it's not flushed.
+    global.requestAnimationFrameQueue = null;
+  });
+
   // TODO: Consider consolidating this with `yieldValue`. In both cases, tests
   // should not be allowed to exit without asserting on the entire log.
   const patchConsoleMethod = (methodName, unexpectedConsoleCallStacks) => {

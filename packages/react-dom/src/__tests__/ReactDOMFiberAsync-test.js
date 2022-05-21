@@ -200,6 +200,7 @@ describe('ReactDOMFiberAsync', () => {
 
       // Should flush both updates now.
       jest.runAllTimers();
+      global.flushRequestAnimationFrameQueue();
       Scheduler.unstable_flushAll();
       expect(asyncValueRef.current.textContent).toBe('hello');
       expect(syncValueRef.current.textContent).toBe('hello');
@@ -236,6 +237,7 @@ describe('ReactDOMFiberAsync', () => {
 
       instance.setState({step: 1});
       expect(container.textContent).toEqual('0');
+      global.flushRequestAnimationFrameQueue();
       Scheduler.unstable_flushAll();
       expect(container.textContent).toEqual('1');
     });
@@ -283,6 +285,7 @@ describe('ReactDOMFiberAsync', () => {
       expect(ops).toEqual(['BC']);
 
       // Flush the async updates
+      global.flushRequestAnimationFrameQueue();
       Scheduler.unstable_flushAll();
       expect(container.textContent).toEqual('ABCD');
       expect(ops).toEqual(['BC', 'ABCD']);
@@ -308,6 +311,7 @@ describe('ReactDOMFiberAsync', () => {
       // Test that a normal update is async
       inst.increment();
       expect(container.textContent).toEqual('0');
+      global.flushRequestAnimationFrameQueue();
       Scheduler.unstable_flushAll();
       expect(container.textContent).toEqual('1');
 

@@ -434,6 +434,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
               })
         : setTimeout,
 
+    // TODO: is this right? What should Noop do here
+    supportsAnimationFrame: true,
+    scheduleAnimationFrame: global.requestAnimationFrame,
+
     prepareForCommit(): null | Object {
       return null;
     },

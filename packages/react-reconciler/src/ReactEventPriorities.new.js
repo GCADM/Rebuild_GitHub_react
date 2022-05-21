@@ -13,6 +13,7 @@ import {
   NoLane,
   SyncLane,
   InputContinuousLane,
+  UnknownLane,
   DefaultLane,
   IdleLane,
   getHighestPriorityLane,
@@ -23,6 +24,7 @@ export opaque type EventPriority = Lane;
 
 export const DiscreteEventPriority: EventPriority = SyncLane;
 export const ContinuousEventPriority: EventPriority = InputContinuousLane;
+export const UnknownEventPriority: EventPriority = UnknownLane;
 export const DefaultEventPriority: EventPriority = DefaultLane;
 export const IdleEventPriority: EventPriority = IdleLane;
 

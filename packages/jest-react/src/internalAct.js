@@ -102,6 +102,11 @@ export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
         // migrate existing tests.
         let didFlushWork;
         do {
+          // Flush scheduled rAF.
+          if (global.flushRequestAnimationFrameQueue) {
+            global.flushRequestAnimationFrameQueue();
+          }
+
           didFlushWork = Scheduler.unstable_flushAllWithoutAsserting();
         } while (didFlushWork);
         return {
@@ -120,6 +125,11 @@ export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
 }
 
 function flushActWork(resolve, reject) {
+  // Flush scheduled rAF.
+  if (global.flushRequestAnimationFrameQueue) {
+    global.flushRequestAnimationFrameQueue();
+  }
+
   // Flush suspended fallbacks
   // $FlowFixMe: Flow doesn't know about global Jest object
   jest.runOnlyPendingTimers();
